@@ -73,11 +73,19 @@ export async function readScheduleFile(
     const row = sheet.getRow(n);
     if (!row.hasValues) continue; // 완전히 빈 줄은 일정도, 제외 대상도 아님
 
+    // 날짜·일정명이 비었거나 날짜가 잘못된 행은 행 번호와 함께 제외한다 (PRD must 1)
+    const date = parseDate(read(row, "날짜")!);
+    const title = cellText(read(row, "일정명")!);
+    if (!date || !title) {
+      excludedRows.push(n);
+      continue;
+    }
+
     items.push({
       row: n,
-      date: cellText(read(row, "날짜")!),
-      title: cellText(read(row, "일정명")!),
-      time: optionalText(read(row, "시간")),
+      date,
+      title,
+      time: parseTime(read(row, "시간")),
       target: optionalText(read(row, "대상자")),
       place: optionalText(read(row, "장소")),
     });
@@ -103,9 +111,18 @@ function hasDataAfter(sheet: ExcelJS.Worksheet, lastRow: number): boolean {
   return false;
 }
 
+/** 셀 값. 수식 칸이면 계산 결과를 쓴다. */
+function cellValue(cell: ExcelJS.Cell): unknown {
+  const value = cell.value;
+  if (value && typeof value === "object" && "result" in value) {
+    return value.result;
+  }
+  return value;
+}
+
 /** 셀에 보이는 글자 (앞뒤 공백 제거) */
 function cellText(cell: ExcelJS.Cell): string {
-  const value = cell.value;
+  const value = cellValue(cell);
   if (value === null || value === undefined) return "";
   if (value instanceof Date) return value.toISOString().slice(0, 10);
   return cell.text.trim();
@@ -114,4 +131,58 @@ function cellText(cell: ExcelJS.Cell): string {
 function optionalText(cell: ExcelJS.Cell | undefined): string {
   const text = cell ? cellText(cell) : "";
   return text || MISSING_TEXT;
+}
+
+/** 2026-10-28, 2026.10.28, 2026/10/28, 2026. 10. 28. */
+const DATE_TEXT = /^(\d{4})\s*[-./]\s*(\d{1,2})\s*[-./]\s*(\d{1,2})\s*\.?$/;
+
+/** 날짜 칸 → YYYY-MM-DD. 연도가 없거나 달력에 없는 날짜면 null (DESIGN 3.1 받는 날짜 형식) */
+function parseDate(cell: ExcelJS.Cell): string | null {
+  const value = cellValue(cell);
+  // 엑셀 날짜 형식 칸은 그날 0시(UTC)로 읽힌다
+  if (value instanceof Date) {
+    return isNaN(value.getTime()) ? null : value.toISOString().slice(0, 10);
+  }
+
+  const match = DATE_TEXT.exec(cellText(cell));
+  if (!match) return null;
+  const [year, month, day] = match.slice(1).map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return null; // 2026-02-30처럼 달력에 없는 날짜
+  }
+  return date.toISOString().slice(0, 10);
+}
+
+/** 9:00, 09:00, 9 : 00 */
+const TIME_TEXT = /^(\d{1,2})\s*:\s*(\d{2})$/;
+
+/** 시간 칸 → HH:mm. 알아볼 수 없으면 글자 그대로, 비었으면 "미기재" */
+function parseTime(cell: ExcelJS.Cell | undefined): string {
+  if (!cell) return MISSING_TEXT;
+  const value = cellValue(cell);
+
+  let minutes: number | null = null;
+  if (value instanceof Date) {
+    // 엑셀 시간 형식 칸은 1899-12-30 그 시각(UTC)으로 읽힌다
+    minutes = value.getUTCHours() * 60 + value.getUTCMinutes();
+  } else if (typeof value === "number" && value >= 0 && value < 1) {
+    // 서식 없는 시간 칸은 하루를 1로 본 소수 (0.375 = 09:00)
+    minutes = Math.round(value * 24 * 60);
+  } else {
+    const match = TIME_TEXT.exec(cellText(cell));
+    if (match) {
+      const [hour, minute] = match.slice(1).map(Number);
+      if (hour < 24 && minute < 60) minutes = hour * 60 + minute;
+    }
+  }
+
+  if (minutes === null) return optionalText(cell);
+  const hh = String(Math.floor(minutes / 60)).padStart(2, "0");
+  const mm = String(minutes % 60).padStart(2, "0");
+  return `${hh}:${mm}`;
 }
