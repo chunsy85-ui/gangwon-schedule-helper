@@ -1,6 +1,9 @@
 // 질문 하나에 대한 최종 답 만들기 (DESIGN 3.2)
-import { NO_SCHEDULE_TEXT } from "../messages";
+import { getPeriods, getToday } from "../date";
+import { NO_SCHEDULE_TEXT, OFF_TOPIC_TEXT, RETRY_TEXT } from "../messages";
 import type { ScheduleLoadResult } from "../schedule/types";
+import { selectSchedule } from "./ai";
+import { buildInput, buildInstructions } from "./prompt";
 import type { AskRequest, AskResponse } from "./types";
 
 export async function answerQuestion(
@@ -12,12 +15,31 @@ export async function answerQuestion(
     return { answer: NO_SCHEDULE_TEXT, items: [], total: 0 };
   }
 
-  // 임시: 일정표 앞쪽 3건을 고정 답으로 보여준다. AI 연결은 PLAN 14~17번에서 한다.
+  // 오늘 날짜는 질문이 올 때마다 새로 계산한다 (DESIGN 3.3)
+  const today = getToday();
+  const instructions = buildInstructions(schedule.items, today, getPeriods(today));
+
+  let selection;
+  try {
+    selection = await selectSchedule(
+      instructions,
+      buildInput(request.question, request.history),
+    );
+  } catch (error) {
+    console.error("AI 호출 실패:", error);
+    return { answer: RETRY_TEXT, items: [], total: 0 };
+  }
+
+  if (selection.kind === "off_topic") {
+    return { answer: OFF_TOPIC_TEXT, items: [], total: 0 };
+  }
+
+  // 임시: AI가 고른 일정을 그대로 보여준다. 기간 검사·정렬·10건 제한·답변 문장은 PLAN 16번에서 한다.
   const items = schedule.items
-    .slice(0, 3)
+    .filter((item) => selection.ids.includes(item.row))
     .map(({ date, title, time, target, place }) => ({ date, title, time, target, place }));
   return {
-    answer: `(고정 답변) "${request.question}" 질문을 받았습니다. 아직 AI가 연결되지 않았습니다.`,
+    answer: `(임시) AI가 고른 일정 ${items.length}건입니다. [${selection.kind} / ${selection.period}]`,
     items,
     total: items.length,
   };
