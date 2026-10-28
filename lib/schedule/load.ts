@@ -6,6 +6,7 @@ import ExcelJS from "exceljs";
 import {
   MAX_DATA_ROWS,
   MISSING_TEXT,
+  REQUIRED_COLUMNS,
   type ScheduleItem,
   type ScheduleLoadResult,
 } from "./types";
@@ -51,6 +52,12 @@ export async function readScheduleFile(
     if (name && !columns.has(name)) columns.set(name, col);
   });
 
+  // 필수 열(날짜, 일정명)이 하나라도 없으면 일정표를 쓰지 않는다 (PRD must 1)
+  const missingColumns = REQUIRED_COLUMNS.filter((name) => !columns.has(name));
+  if (missingColumns.length > 0) {
+    return { status: "missing-columns", missingColumns };
+  }
+
   // 데이터는 엑셀 2~501행까지만 읽는다
   const lastRow = Math.min(sheet.rowCount, MAX_DATA_ROWS + 1);
   const truncated = hasDataAfter(sheet, lastRow);
@@ -66,12 +73,10 @@ export async function readScheduleFile(
     const row = sheet.getRow(n);
     if (!row.hasValues) continue; // 완전히 빈 줄은 일정도, 제외 대상도 아님
 
-    const date = read(row, "날짜");
-    const title = read(row, "일정명");
     items.push({
       row: n,
-      date: date ? cellText(date) : "",
-      title: title ? cellText(title) : "",
+      date: cellText(read(row, "날짜")!),
+      title: cellText(read(row, "일정명")!),
       time: optionalText(read(row, "시간")),
       target: optionalText(read(row, "대상자")),
       place: optionalText(read(row, "장소")),
