@@ -40,15 +40,21 @@ npm run lint    # ESLint (eslint-config-next core-web-vitals + typescript)
 
 ```
 my-app/
-├─ app/              # 화면(page.tsx, layout.tsx)과 서버 API(app/api/...)
+├─ app/              # 화면(page.tsx, components/)과 서버 API(app/api/ask)
+├─ lib/              # 일정표 읽기(schedule/), 날짜 계산, AI 질문 처리(ask/)
+├─ data/             # schedule.xlsx(일정표), test-questions.md(테스트 20문항)
+├─ scripts/          # 테스트 실행 스크립트
 ├─ public/           # 정적 파일
 ├─ PRD.md            # 기획서 (기능·범위의 원본)
+├─ PLAN.md           # 작업 순서와 성공 기준
+├─ DESIGN.md         # 화면 구성·데이터 흐름·기술 선택
 ├─ AGENTS.md         # Next.js가 자동 생성하는 에이전트 규칙 (지우지 않는다)
 ├─ .env              # 비밀 값 (커밋 금지)
 └─ trash-can/        # 삭제 대신 옮겨 두는 폴더 (필요할 때 생성)
 ```
 
-- 엑셀 일정표의 "정해진 위치"와 파일명은 개발 단위 1번에서 정하고, 정해지면 이 문서에 적는다.
+- 엑셀 일정표의 정해진 위치는 **`data/schedule.xlsx`** 이다. 일정 담당자는 이 파일만 교체하고 다시 배포한다.
+- 문서 우선순위: PRD.md → PLAN.md → DESIGN.md. 구현은 DESIGN.md를 따른다.
 
 ## 5. 기능 범위 (PRD 요약)
 
