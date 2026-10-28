@@ -9,10 +9,9 @@ import {
   type AskResponse,
   type AskTurn,
 } from "@/lib/ask/types";
+import { RETRY_TEXT } from "@/lib/messages";
 
 const EXAMPLES = ["오늘 일정 알려줘", "이번 주 일정 알려줘", "다음 주 일정 알려줘"];
-
-const RETRY_TEXT = "잠시 후 다시 질문해 주세요.";
 
 type Message =
   | { role: "user"; text: string }

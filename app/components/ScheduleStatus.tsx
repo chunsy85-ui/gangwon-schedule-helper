@@ -1,9 +1,7 @@
 // 화면 ② 일정표 상태 상자 (DESIGN 2장)
 import type { ReactNode } from "react";
+import { NO_SCHEDULE_TEXT } from "@/lib/messages";
 import type { ScheduleLoadResult } from "@/lib/schedule/types";
-
-const NO_SCHEDULE_TEXT =
-  "아직 등록된 일정표가 없습니다. 일정 담당자에게 문의하세요.";
 
 export default function ScheduleStatus({
   result,
