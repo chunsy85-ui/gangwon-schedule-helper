@@ -33,6 +33,9 @@ npm run build   # 프로덕션 빌드
 npm run start   # 빌드 결과 실행
 npm run lint    # ESLint (eslint-config-next core-web-vitals + typescript)
 npm run check:loader  # 일정표 로더 종합 확인 (망가뜨린 엑셀 7가지, data/test-files/)
+npm run test:questions  # 테스트 질문 20개 채점 → data/test-results.md (AI 요금 발생)
+                        # 먼저 build 후 TEST_TODAY=2026-10-28 npx next start -p 3002 로 띄우고
+                        # TEST_URL=http://localhost:3002 를 붙여 실행
 ```
 
 코드를 바꾼 뒤에는 8장의 작업 절차(검증 루프)를 따른다.
