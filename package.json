@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "check:loader": "node --no-warnings --conditions=react-server --import ./scripts/ts-hooks.mjs scripts/check-loader.mjs"
   },
   "dependencies": {
     "exceljs": "^4.4.0",

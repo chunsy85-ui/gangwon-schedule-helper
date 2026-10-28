@@ -32,6 +32,7 @@ npm run dev     # 개발 서버 (http://localhost:3000)
 npm run build   # 프로덕션 빌드
 npm run start   # 빌드 결과 실행
 npm run lint    # ESLint (eslint-config-next core-web-vitals + typescript)
+npm run check:loader  # 일정표 로더 종합 확인 (망가뜨린 엑셀 7가지, data/test-files/)
 ```
 
 코드를 바꾼 뒤에는 8장의 작업 절차(검증 루프)를 따른다.
