@@ -54,6 +54,7 @@ my-app/
 ```
 
 - 엑셀 일정표의 정해진 위치는 **`data/schedule.xlsx`** 이다. 일정 담당자는 이 파일만 교체하고 다시 배포한다.
+  - 지금 들어 있는 것은 실습용 가상 일정표(41건)이며, `node scripts/make-sample-schedule.mjs`로 다시 만들 수 있다.
 - 문서 우선순위: PRD.md → PLAN.md → DESIGN.md. 구현은 DESIGN.md를 따른다.
 
 ## 5. 기능 범위 (PRD 요약)
