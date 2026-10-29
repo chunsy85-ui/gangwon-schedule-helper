@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 강원지역본부 일정 도우미
 
-## Getting Started
+강원지역본부 기획관리팀원이 **평소 말투로 일정을 물으면**, 프로젝트에 넣어 둔 엑셀 일정표**만** 보고 답해 주는 웹앱입니다.
 
-First, run the development server:
+> ⚠️ 이 저장소의 일정표(`data/schedule.xlsx`)는 **실습용 가상 데이터**입니다. 실제 본부 일정이 아닙니다.
+
+## 해결하려는 문제
+
+일정이 메일·메신저·개인 달력에 흩어져 있어 "이번 주 본부장 일정이 뭐지?" 같은 간단한 질문도 담당자에게 물어야 합니다.
+이 앱은 일정을 한 곳(엑셀 1개)에 모으고, 앱에 바로 물어 30초 안에 확인하게 합니다.
+
+## 주요 기능
+
+- **일정표 불러오기**: `data/schedule.xlsx` 1개(최대 500행)를 읽습니다. 필수 열(날짜·일정명)이 없으면 빠진 열 이름을, 잘못된 행은 "n행 제외됨"과 행 번호를 화면에 보여줍니다.
+- **일정 질문 답변**: "다음 주 본부장 일정 알려줘"처럼 물으면 일정표 내용만으로 답합니다.
+  - 날짜(YYYY-MM-DD)와 일정명은 항상 표시하고, 비어 있는 시간·대상자·장소는 "미기재"로 표시
+  - "이번 주"는 월~일, "다음 주"는 그다음 월~일
+  - 최대 10건까지 보여주고, 더 있으면 "총 n건 중 10건" 안내와 [나머지 n건 더 보기]
+  - 일정표에 없으면 "등록된 일정표에 해당 일정이 없습니다", 일정과 무관한 질문에는 "일정에 관한 질문만 답할 수 있습니다"
+- **이번 주 일정 요약**: 기본 화면에 이번 주 일정을 한눈에 보여줍니다.
+
+만들지 않은 것: 로그인, 화면 업로드, 앱 안 일정 편집, 외부 시스템 연동, 알림, 일정표 이력 관리, 모바일 앱
+
+## 동작 방식
+
+AI(OpenAI)는 질문 종류·기간·해당 일정 번호만 고르고, 번호 검증·정렬·10건 제한·답변 문장은 **코드가 직접** 만듭니다.
+그래서 AI가 없는 일정을 지어내도 화면에 나오지 않습니다.
+
+## 기술 스택
+
+Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS v4 · ExcelJS · OpenAI API · Vercel
+
+## 직접 실행하기
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+# .env 파일을 만들고 OPENAI_API_KEY, OPENAI_MODEL 값을 넣는다 (.env는 커밋되지 않음)
+npm run dev      # http://localhost:3000
+npm run lint
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+일정표를 바꾸려면 `data/schedule.xlsx`를 교체하고 다시 배포합니다. (샘플은 `node scripts/make-sample-schedule.mjs`로 다시 만들 수 있습니다.)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 보안·개인정보
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- 로그인 없이 쓰는 앱입니다. 일정표와 질문 내용은 외부 AI 서비스(OpenAI)로 전송되므로 **가상 일정으로만** 사용하세요.
+- AI API 키는 서버 코드에서만 쓰며, 저장소에는 올리지 않습니다.
 
-## Learn More
+## 기획 문서
 
-To learn more about Next.js, take a look at the following resources:
+- [PRD.md](PRD.md): 서비스 기획서 (문제·목표·기능·범위·보안)
+- [PLAN.md](PLAN.md): 목표, 성공 기준, 작업 순서
+- [DESIGN.md](DESIGN.md): 화면 구성, 데이터 흐름, 기술 선택
+- [CLAUDE.md](CLAUDE.md): 프로젝트 작업 규칙
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 검증 결과
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+테스트 질문 20개 기준 정답 20/20, 평균 응답 약 1.4초 (`data/test-questions.md`, `data/test-results.md`).

@@ -42,3 +42,8 @@ next-env.d.ts
 
 # 삭제 대기 파일 (사용자가 직접 확인 후 삭제)
 /trash-can/
+
+# 개인·도구 파일 (공개 저장소에 올리지 않음)
+Supabase*
+/.bkit/
+/.claude/
