@@ -2,6 +2,7 @@
 // 답변 문장과 일정 글자는 모두 코드가 만든다. AI 응답은 믿기 전에 검사한다.
 import { isInRange, type DateRange, type Periods } from "../date";
 import { NOT_FOUND_TEXT, OFF_TOPIC_TEXT } from "../messages";
+import { compareItems } from "../schedule/sort";
 import type { ScheduleItem } from "../schedule/types";
 import type { Selection } from "./prompt";
 import type { AskResponse } from "./types";
@@ -10,7 +11,6 @@ import type { AskResponse } from "./types";
 export const MAX_ITEMS = 10;
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
-const HH_MM = /^\d{2}:\d{2}$/;
 
 export function buildAnswer(
   selection: Selection,
@@ -81,13 +81,4 @@ function periodLabel(selection: Selection, range: DateRange | null): string {
     default:
       return range.start === range.end ? range.start : `${range.start} ~ ${range.end}`;
   }
-}
-
-/** 날짜순, 같은 날은 시간순. 시간이 비었거나 알아볼 수 없으면 그날의 맨 뒤 */
-function compareItems(a: ScheduleItem, b: ScheduleItem): number {
-  if (a.date !== b.date) return a.date < b.date ? -1 : 1;
-  const ta = HH_MM.test(a.time) ? a.time : "99:99";
-  const tb = HH_MM.test(b.time) ? b.time : "99:99";
-  if (ta !== tb) return ta < tb ? -1 : 1;
-  return a.row - b.row;
 }
