@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // 삭제 전에 사용자가 확인할 파일을 옮겨 두는 폴더 (CLAUDE.md 1장)
+    "trash-can/**",
   ]),
 ]);
 

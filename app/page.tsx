@@ -1,7 +1,7 @@
-// 메인 화면 (DESIGN 2장) — ① 머리글, ② 일정표 상태, 이번 주 요약, 전체 일정 보기, ③④ 대화와 질문 입력
+// 메인 화면 (DESIGN 2장) — ① 머리글, ② 일정표 상태, 이번 주 요약, ③④ 대화와 질문 입력
+// 기본 화면에는 이번 주 일정만 보이고, 전체 일정은 질문했을 때만 보여준다.
 import { Suspense } from "react";
 import { loadSchedule } from "@/lib/schedule/load";
-import AllSchedule from "./components/AllSchedule";
 import Chat from "./components/Chat";
 import ScheduleStatus from "./components/ScheduleStatus";
 import WeekSummary, { WeekSummaryFallback } from "./components/WeekSummary";
@@ -24,7 +24,6 @@ export default async function Home() {
       <Suspense fallback={<WeekSummaryFallback />}>
         <WeekSummary schedule={schedule} />
       </Suspense>
-      <AllSchedule schedule={schedule} />
       <Chat />
     </main>
   );
