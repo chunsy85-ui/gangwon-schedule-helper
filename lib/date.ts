@@ -50,6 +50,13 @@ export function addDays(date: string, days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+/** YYYY-MM-DD 모양이면서 달력에 실제로 있는 날짜인지 (2026-02-30 같은 날짜는 false) */
+export function isValidDate(date: string): boolean {
+  if (!ISO_DATE.test(date)) return false;
+  const d = toUtcDate(date);
+  return !isNaN(d.getTime()) && d.toISOString().slice(0, 10) === date;
+}
+
 /** 요일 한 글자 (월, 화 …) */
 export function weekdayOf(date: string): string {
   return WEEKDAYS[toUtcDate(date).getUTCDay()];

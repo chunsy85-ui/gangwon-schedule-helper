@@ -7,6 +7,12 @@ export const MAX_QUESTION_LENGTH = 500;
 /** 이어지는 질문을 위해 함께 보내는 최근 대화 수 */
 export const MAX_HISTORY = 3;
 
+/** 앞 대화의 답변 글자 수 상한. 일정 10건 목록까지 넉넉히 들어가는 길이이며, 넘는 부분은 잘라서 쓴다. */
+export const MAX_HISTORY_ANSWER_LENGTH = 2000;
+
+/** 요청 본문 전체의 글자 수 상한. 질문 1개와 앞 대화 3개가 넉넉히 들어가는 크기이며, 넘으면 거절한다. */
+export const MAX_BODY_LENGTH = 20_000;
+
 export type AskTurn = { question: string; answer: string };
 
 export type AskRequest = {

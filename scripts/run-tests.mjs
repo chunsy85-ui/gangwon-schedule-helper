@@ -29,7 +29,18 @@ function readQuestions() {
   });
 }
 
+// 서버의 요청 횟수 제한(같은 IP에서 1분에 20번)에 걸리지 않도록, 요청을 시작하는 간격을 띄운다.
+// 그래서 20문항을 채점하는 데 1분 20초쯤 걸린다. (측정하는 응답 시간에는 이 기다림이 들어가지 않는다)
+const MIN_GAP_MS = 3_500;
+let lastStart = 0;
+async function pace() {
+  const wait = lastStart + MIN_GAP_MS - Date.now();
+  if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
+  lastStart = Date.now();
+}
+
 async function ask(question, history = []) {
+  await pace();
   const started = Date.now();
   const res = await fetch(`${BASE_URL}/api/ask`, {
     method: "POST",
