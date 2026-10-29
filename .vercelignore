@@ -13,3 +13,4 @@ Supabase*
 *.tsbuildinfo
 data/test-files
 data/test-results.md
+.bkit
