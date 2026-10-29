@@ -15,6 +15,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "강원지역본부 일정 도우미",
   description: "본부 일정표를 보고 일정 질문에 답하는 도우미",
+  // 내부 업무용이라 검색엔진에 나타나지 않게 한다 (보안 점검 6번)
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

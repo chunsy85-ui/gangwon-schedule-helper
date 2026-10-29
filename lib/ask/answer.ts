@@ -2,7 +2,7 @@
 import { getPeriods, getToday } from "../date";
 import { NO_SCHEDULE_TEXT, RETRY_TEXT } from "../messages";
 import type { ScheduleLoadResult } from "../schedule/types";
-import { selectSchedule } from "./ai";
+import { describeAiError, selectSchedule } from "./ai";
 import { buildAnswer } from "./format";
 import { buildInput, buildInstructions } from "./prompt";
 import type { AskRequest, AskResponse } from "./types";
@@ -28,7 +28,7 @@ export async function answerQuestion(
       buildInput(request.question, request.history),
     );
   } catch (error) {
-    console.error("AI 호출 실패:", error);
+    console.error("AI 호출 실패:", describeAiError(error));
     return { answer: RETRY_TEXT, items: [], total: 0 };
   }
 

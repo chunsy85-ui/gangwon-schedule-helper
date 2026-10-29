@@ -15,7 +15,8 @@ export default async function Home() {
           강원지역본부 일정 도우미
         </h1>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          ⓘ 일정표와 질문 내용이 외부 AI 서비스로 전송됩니다.
+          ⓘ 일정표와 질문 내용이 외부 AI 서비스로 전송됩니다(OpenAI). 이름·연락처 등
+          개인정보는 입력하지 마세요.
         </p>
       </header>
       <ScheduleStatus result={schedule} />

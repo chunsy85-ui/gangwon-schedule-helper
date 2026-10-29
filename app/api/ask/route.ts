@@ -2,6 +2,7 @@
 import { answerQuestion } from "@/lib/ask/answer";
 import { cleanHistory } from "@/lib/ask/history";
 import { checkRateLimit, clientIpOf } from "@/lib/ask/rate-limit";
+import { isCrossSite, isJsonRequest } from "@/lib/ask/request-guard";
 import {
   MAX_BODY_LENGTH,
   MAX_QUESTION_LENGTH,
@@ -10,6 +11,15 @@ import {
 import { loadSchedule } from "@/lib/schedule/load";
 
 export async function POST(request: Request) {
+  // 다른 사이트의 페이지가 방문자 브라우저로 몰래 보낸 요청과 JSON이 아닌 요청은 먼저 거절한다.
+  // 거절된 요청은 아래 횟수 제한에 세지 않아, 이런 요청으로 정상 사용자의 한도를 채울 수 없다.
+  if (isCrossSite(request.headers)) {
+    return Response.json({ error: "허용되지 않는 요청입니다." }, { status: 403 });
+  }
+  if (!isJsonRequest(request.headers)) {
+    return Response.json({ error: "요청 형식이 올바르지 않습니다." }, { status: 415 });
+  }
+
   // 요청 횟수 제한: AI를 부르기 전에 막아, 계속 질문을 보내 요금이 쌓이는 것을 줄인다
   const limit = checkRateLimit(clientIpOf(request.headers));
   if (!limit.ok) {
