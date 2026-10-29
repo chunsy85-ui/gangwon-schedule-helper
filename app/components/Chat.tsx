@@ -15,7 +15,17 @@ const EXAMPLES = ["오늘 일정 알려줘", "이번 주 일정 알려줘", "다
 
 type Message =
   | { role: "user"; text: string }
-  | { role: "assistant"; answer: string; items: AnswerItem[] };
+  | {
+      role: "assistant";
+      answer: string;
+      items: AnswerItem[];
+      /** 10건을 넘어 기본으로는 숨겨 둔 나머지 일정 */
+      more: AnswerItem[];
+      /** 나머지까지 모두 보여줄 때 쓰는 답변 문장 */
+      expandedAnswer?: string;
+      /** "나머지 더 보기"를 눌러 모두 펼쳤는지 */
+      expanded: boolean;
+    };
 
 export default function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -46,12 +56,28 @@ export default function Chat() {
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: AskResponse = await res.json();
-      reply = { role: "assistant", answer: data.answer, items: data.items };
+      reply = {
+        role: "assistant",
+        answer: data.answer,
+        items: data.items,
+        more: data.moreItems ?? [],
+        expandedAnswer: data.expandedAnswer,
+        expanded: false,
+      };
     } catch {
-      reply = { role: "assistant", answer: RETRY_TEXT, items: [] };
+      reply = { role: "assistant", answer: RETRY_TEXT, items: [], more: [], expanded: false };
     }
     setMessages((prev) => [...prev, reply]);
     setLoading(false);
+  }
+
+  /** 10건을 넘어 숨겨 둔 나머지를 펼친다 */
+  function expand(index: number) {
+    setMessages((prev) =>
+      prev.map((message, i) =>
+        i === index && message.role === "assistant" ? { ...message, expanded: true } : message,
+      ),
+    );
   }
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -80,8 +106,17 @@ export default function Chat() {
               key={i}
               className="flex max-w-full flex-col gap-2 self-start rounded-2xl rounded-bl-sm border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950"
             >
-              <p>{message.answer}</p>
-              {message.items.length > 0 && <ItemList items={message.items} />}
+              <p>{message.expanded ? (message.expandedAnswer ?? message.answer) : message.answer}</p>
+              {message.items.length > 0 && <ItemList items={visibleItems(message)} />}
+              {message.more.length > 0 && !message.expanded && (
+                <button
+                  type="button"
+                  onClick={() => expand(i)}
+                  className="self-start rounded-full border border-zinc-300 px-3 py-1 text-sm text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+                >
+                  나머지 {message.more.length}건 더 보기
+                </button>
+              )}
             </li>
           ),
         )}
@@ -129,6 +164,11 @@ export default function Chat() {
   );
 }
 
+/** 지금 화면에 보이는 일정. 기본은 최대 10건이고, 나머지 더 보기를 누르면 전부다. */
+function visibleItems(message: Extract<Message, { role: "assistant" }>): AnswerItem[] {
+  return message.expanded ? [...message.items, ...message.more] : message.items;
+}
+
 /** 일정 목록 한 줄 = 날짜 · 일정명 · 시간 · 대상자 · 장소 */
 function ItemList({ items }: { items: AnswerItem[] }) {
   return (
@@ -153,9 +193,10 @@ function recentTurns(messages: Message[]): AskTurn[] {
     const q = messages[i];
     const a = messages[i + 1];
     if (q.role === "user" && a.role === "assistant") {
-      // "그중 본부장만" 같은 질문을 위해 답에 나온 일정도 함께 적어 보낸다
-      const lines = a.items.map((item) => `- ${item.date} ${item.title}`);
-      turns.push({ question: q.text, answer: [a.answer, ...lines].join("\n") });
+      // "그중 본부장만" 같은 질문을 위해 화면에 보이는 일정도 함께 적어 보낸다
+      const lines = visibleItems(a).map((item) => `- ${item.date} ${item.title}`);
+      const answer = a.expanded ? (a.expandedAnswer ?? a.answer) : a.answer;
+      turns.push({ question: q.text, answer: [answer, ...lines].join("\n") });
     }
   }
   return turns.slice(-MAX_HISTORY);

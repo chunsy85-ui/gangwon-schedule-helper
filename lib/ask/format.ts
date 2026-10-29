@@ -40,17 +40,29 @@ export function buildAnswer(
   }
 
   const total = matched.length;
-  const sentences = [`${periodLabel(selection, range)} 일정은 총 ${total}건입니다.`];
+  const summary = `${periodLabel(selection, range)} 일정은 총 ${total}건입니다.`;
+  const sentences = [summary];
   if (total > MAX_ITEMS) {
     sentences.push(`총 ${total}건 중 ${MAX_ITEMS}건을 보여드립니다.`);
   }
 
+  const all = matched.map(({ date, title, time, target, place }) => ({
+    date,
+    title,
+    time,
+    target,
+    place,
+  }));
+  const rest = all.slice(MAX_ITEMS);
+
   return {
     answer: sentences.join(" "),
-    items: matched
-      .slice(0, MAX_ITEMS)
-      .map(({ date, title, time, target, place }) => ({ date, title, time, target, place })),
+    // 기본은 최대 10건만 보여준다. 나머지는 사용자가 원할 때만 보이도록 따로 담아 보낸다.
+    items: all.slice(0, MAX_ITEMS),
     total,
+    ...(rest.length > 0
+      ? { moreItems: rest, expandedAnswer: `${summary} 전체 ${total}건을 모두 보여드립니다.` }
+      : {}),
   };
 }
 
